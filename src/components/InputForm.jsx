@@ -44,13 +44,13 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
   const canGenerate = topic.trim().length > 0 && selectedPlatforms.length > 0
 
   return (
-    <div className="card-gradient border border-metal/20 rounded-2xl p-6 md:p-8">
+    <div className="card-gradient border border-metal/20 rounded-2xl p-4 md:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h2 className="text-lg font-bold text-white">Caption Details</h2>
         <button
           type="button"
           onClick={onExample}
-          className="text-sm text-azure hover:text-white transition-colors duration-200 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-azure rounded-lg px-2 py-1"
+          className="text-sm text-azure hover:text-white transition-colors duration-200 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-azure rounded-lg px-2 py-2 min-h-[36px]"
           aria-label="Load example data"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -168,7 +168,7 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
             <button
               type="button"
               onClick={handleSelectAll}
-              className="text-xs text-azure hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-azure rounded px-1"
+              className="text-xs text-azure hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-azure rounded px-2 py-1.5 min-h-[32px]"
               aria-label={allSelected ? 'Deselect all platforms' : 'Select all platforms'}
             >
               {allSelected ? 'Deselect all' : 'Select all'}
@@ -187,7 +187,7 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
                   type="button"
                   onClick={() => togglePlatform(p)}
                   aria-pressed={selected}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-azure focus:ring-offset-2 focus:ring-offset-oblivion
+                  className={`flex items-center gap-2 px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-medium border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-azure focus:ring-offset-2 focus:ring-offset-oblivion
                     ${selected
                       ? 'bg-azure/20 border-azure/60 text-white'
                       : 'bg-metal/10 border-metal/20 text-galactic hover:border-metal/40 hover:text-cloudy'

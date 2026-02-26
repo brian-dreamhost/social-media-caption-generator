@@ -5,7 +5,7 @@ import PlatformIcon from './PlatformIcon.jsx'
 const PLATFORM_COLORS = {
   instagram: 'from-[#E1306C]/20 to-transparent',
   linkedin: 'from-[#0A66C2]/20 to-transparent',
-  twitter: 'from-[#555]/20 to-transparent',
+  twitter: 'from-metal/20 to-transparent',
   tiktok: 'from-[#69C9D0]/20 to-transparent',
   facebook: 'from-[#1877F2]/20 to-transparent',
 }
