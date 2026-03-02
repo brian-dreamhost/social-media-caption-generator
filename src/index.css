@@ -48,6 +48,10 @@ body { margin: 0; min-height: 100vh; background-color: var(--color-abyss); color
 }
 .card-gradient { background: linear-gradient(180deg, rgba(17,17,17,1) 0%, rgba(7,28,38,0.5) 100%); }
 
+/* Hide scrollbar for angle tabs */
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
 @theme {
   --color-abyss: #000000; --color-oblivion: #111111; --color-midnight: #071C26;
   --color-azure: #0073EC; --color-azure-hover: #0066d4; --color-prince: #A644E5;

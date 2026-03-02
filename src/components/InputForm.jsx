@@ -1,12 +1,5 @@
-import { PLATFORMS, PLATFORM_ORDER, TONES } from '../utils/captionUtils.js'
+import { PLATFORMS, PLATFORM_ORDER, TONES } from '../utils/captionEngine.js'
 import PlatformIcon from './PlatformIcon.jsx'
-
-const EXAMPLE = {
-  topic: 'New blog post: 5 ways to improve your website speed',
-  cta: 'Read the full guide',
-  tone: 'friendly',
-  includeHashtags: true,
-}
 
 const PLATFORM_LABELS = {
   instagram: 'Instagram',
@@ -25,7 +18,7 @@ const PLATFORM_ICON_COLORS = {
 }
 
 export default function InputForm({ values, onChange, onGenerate, onExample }) {
-  const { topic, cta, tone, includeHashtags, selectedPlatforms } = values
+  const { topic, description, cta, tone, includeHashtags, selectedPlatforms } = values
 
   function togglePlatform(p) {
     const next = selectedPlatforms.includes(p)
@@ -67,19 +60,40 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
         {/* Topic */}
         <div>
           <label htmlFor="topic" className="block text-sm font-semibold text-cloudy mb-2">
-            Topic / Product <span className="text-coral" aria-hidden="true">*</span>
+            Topic / Subject <span className="text-coral" aria-hidden="true">*</span>
           </label>
           <input
             id="topic"
             type="text"
             value={topic}
             onChange={(e) => onChange('topic', e.target.value)}
-            placeholder="e.g. New blog post about email marketing tips"
+            placeholder="e.g. Launch of our new website speed optimization service"
             required
             aria-required="true"
             className="w-full bg-midnight/60 border border-metal/30 rounded-xl px-4 py-3 text-sm text-white placeholder-galactic focus:outline-none focus:ring-2 focus:ring-azure focus:border-azure/50 transition-colors duration-200"
           />
-          <p className="mt-1.5 text-xs text-galactic">What is your post about? Be specific for better captions.</p>
+          <p className="mt-1.5 text-xs text-galactic">
+            Keywords are extracted from this to generate relevant hashtags. Be specific.
+          </p>
+        </div>
+
+        {/* Description / Extra context */}
+        <div>
+          <label htmlFor="description" className="block text-sm font-semibold text-cloudy mb-2">
+            Details / Key Points <span className="text-galactic font-normal">(optional)</span>
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => onChange('description', e.target.value)}
+            placeholder="Add key details, benefits, or context that should appear in captions. More detail = better, more specific captions."
+            rows={3}
+            className="w-full bg-midnight/60 border border-metal/30 rounded-xl px-4 py-3 text-sm text-white placeholder-galactic focus:outline-none focus:ring-2 focus:ring-azure focus:border-azure/50 transition-colors duration-200 resize-y"
+            style={{ minHeight: '72px' }}
+          />
+          <p className="mt-1.5 text-xs text-galactic">
+            Additional keywords here will also be used for hashtag generation.
+          </p>
         </div>
 
         {/* CTA */}
@@ -97,66 +111,70 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
           />
         </div>
 
-        {/* Tone + Hashtags row */}
-        <div className="flex flex-col sm:flex-row gap-5">
-          {/* Tone */}
-          <div className="flex-1">
-            <label htmlFor="tone" className="block text-sm font-semibold text-cloudy mb-2">
-              Tone
-            </label>
-            <div className="relative">
-              <select
-                id="tone"
-                value={tone}
-                onChange={(e) => onChange('tone', e.target.value)}
-                className="w-full bg-midnight/60 border border-metal/30 rounded-xl px-4 py-3 text-sm text-white appearance-none focus:outline-none focus:ring-2 focus:ring-azure focus:border-azure/50 transition-colors duration-200 cursor-pointer pr-10"
-              >
-                {Object.entries(TONES).map(([key]) => (
-                  <option key={key} value={key} className="bg-oblivion text-white capitalize">
-                    {key.charAt(0).toUpperCase() + key.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-galactic" aria-hidden="true">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </div>
-            </div>
+        {/* Tone */}
+        <div>
+          <label className="block text-sm font-semibold text-cloudy mb-2">
+            Tone
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Caption tone">
+            {Object.entries(TONES).map(([key, data]) => {
+              const isSelected = tone === key
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => onChange('tone', key)}
+                  className={`flex flex-col items-start px-3 py-2.5 rounded-xl text-left border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-azure focus:ring-offset-2 focus:ring-offset-oblivion min-h-[44px]
+                    ${isSelected
+                      ? 'bg-azure/15 border-azure/50 ring-1 ring-azure/30'
+                      : 'bg-metal/10 border-metal/20 hover:border-metal/40'
+                    }`}
+                >
+                  <span className={`text-sm font-semibold ${isSelected ? 'text-azure' : 'text-cloudy'}`}>
+                    {data.label}
+                  </span>
+                  <span className="text-[11px] text-galactic leading-snug mt-0.5">
+                    {data.desc}
+                  </span>
+                </button>
+              )
+            })}
           </div>
+        </div>
 
-          {/* Hashtags toggle */}
-          <div className="flex-shrink-0 sm:pt-0 flex items-end pb-px">
-            <label className="flex items-center gap-3 cursor-pointer select-none group" htmlFor="hashtags-toggle">
-              <div className="relative flex-shrink-0">
-                <input
-                  id="hashtags-toggle"
-                  type="checkbox"
-                  checked={includeHashtags}
-                  onChange={(e) => onChange('includeHashtags', e.target.checked)}
-                  className="sr-only"
-                  role="switch"
-                  aria-checked={includeHashtags}
-                />
-                <div
-                  className={`w-11 h-6 rounded-full transition-colors duration-200 focus-within:ring-2 focus-within:ring-azure focus-within:ring-offset-2 focus-within:ring-offset-oblivion
-                    ${includeHashtags ? 'bg-azure' : 'bg-metal/50'}`}
-                  aria-hidden="true"
-                />
-                <div
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200
-                    ${includeHashtags ? 'translate-x-5' : 'translate-x-0'}`}
-                  aria-hidden="true"
-                />
-              </div>
-              <div>
-                <span className="text-sm font-semibold text-cloudy group-hover:text-white transition-colors duration-200">
-                  Include Hashtags
-                </span>
-                <p className="text-xs text-galactic mt-0.5">LinkedIn always includes hashtags</p>
-              </div>
-            </label>
-          </div>
+        {/* Hashtags toggle */}
+        <div>
+          <label className="flex items-center gap-3 cursor-pointer select-none group" htmlFor="hashtags-toggle">
+            <div className="relative flex-shrink-0">
+              <input
+                id="hashtags-toggle"
+                type="checkbox"
+                checked={includeHashtags}
+                onChange={(e) => onChange('includeHashtags', e.target.checked)}
+                className="sr-only"
+                role="switch"
+                aria-checked={includeHashtags}
+              />
+              <div
+                className={`w-11 h-6 rounded-full transition-colors duration-200 focus-within:ring-2 focus-within:ring-azure focus-within:ring-offset-2 focus-within:ring-offset-oblivion
+                  ${includeHashtags ? 'bg-azure' : 'bg-metal/50'}`}
+                aria-hidden="true"
+              />
+              <div
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200
+                  ${includeHashtags ? 'translate-x-5' : 'translate-x-0'}`}
+                aria-hidden="true"
+              />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-cloudy group-hover:text-white transition-colors duration-200">
+                Include Hashtags
+              </span>
+              <p className="text-xs text-galactic mt-0.5">Generated from your topic keywords, not generic</p>
+            </div>
+          </label>
         </div>
 
         {/* Platform selector */}
@@ -221,8 +239,12 @@ export default function InputForm({ values, onChange, onGenerate, onExample }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>
-          Generate Captions
+          Generate 5 Caption Angles
         </button>
+
+        <p className="text-[11px] text-galactic text-center leading-relaxed">
+          Generates 5 different angles per platform: Hook, Story, Stat, Benefit, and Curiosity — each scored for effectiveness.
+        </p>
       </div>
     </div>
   )

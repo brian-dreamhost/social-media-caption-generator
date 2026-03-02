@@ -1,64 +1,78 @@
 import { useState, useCallback } from 'react'
 import InputForm from './components/InputForm.jsx'
 import CaptionCard from './components/CaptionCard.jsx'
-import { PLATFORM_ORDER, generateCaption } from './utils/captionUtils.js'
+import HashtagPanel from './components/HashtagPanel.jsx'
+import { PLATFORM_ORDER, generateCaptions } from './utils/captionEngine.js'
 
 const DEFAULT_VALUES = {
   topic: '',
+  description: '',
   cta: '',
-  tone: 'friendly',
+  tone: 'casual',
   includeHashtags: true,
   selectedPlatforms: [...PLATFORM_ORDER],
 }
 
 const EXAMPLE_VALUES = {
-  topic: 'New blog post: 5 ways to improve your website speed',
-  cta: 'Read the full guide',
-  tone: 'friendly',
+  topic: 'Launch of our new website speed optimization service for small businesses',
+  description: 'We help small businesses cut page load times by 50% or more. Our service includes Core Web Vitals auditing, image compression, CDN setup, and caching optimization. Starting at $299/month with a free initial audit.',
+  cta: 'Book your free speed audit',
+  tone: 'casual',
   includeHashtags: true,
   selectedPlatforms: [...PLATFORM_ORDER],
 }
 
 export default function App() {
   const [formValues, setFormValues] = useState(DEFAULT_VALUES)
-  const [captions, setCaptions] = useState({})
+  const [results, setResults] = useState({})
   const [hasGenerated, setHasGenerated] = useState(false)
+  const [genCounter, setGenCounter] = useState(0)
 
   const handleChange = useCallback((field, value) => {
     setFormValues((prev) => ({ ...prev, [field]: value }))
   }, [])
 
-  const handleGenerate = useCallback(() => {
-    const { topic, cta, tone, includeHashtags, selectedPlatforms } = formValues
+  const doGenerate = useCallback((values) => {
+    const { topic, description, cta, tone, includeHashtags, selectedPlatforms } = values
     if (!topic.trim() || selectedPlatforms.length === 0) return
+
+    // Combine topic + description for richer keyword extraction
+    const combinedTopic = description
+      ? `${topic}. ${description}`
+      : topic
+
     const generated = {}
     selectedPlatforms.forEach((platform) => {
-      generated[platform] = generateCaption(platform, { topic, cta, tone, includeHashtags })
+      generated[platform] = generateCaptions(platform, {
+        topic: combinedTopic,
+        cta,
+        tone,
+        includeHashtags,
+      })
     })
-    setCaptions(generated)
+    setResults(generated)
     setHasGenerated(true)
-  }, [formValues])
+    setGenCounter(c => c + 1)
+  }, [])
+
+  const handleGenerate = useCallback(() => {
+    doGenerate(formValues)
+  }, [formValues, doGenerate])
 
   const handleExample = useCallback(() => {
     setFormValues(EXAMPLE_VALUES)
-    // Auto-generate after loading example
-    const generated = {}
-    PLATFORM_ORDER.forEach((platform) => {
-      generated[platform] = generateCaption(platform, {
-        topic: EXAMPLE_VALUES.topic,
-        cta: EXAMPLE_VALUES.cta,
-        tone: EXAMPLE_VALUES.tone,
-        includeHashtags: EXAMPLE_VALUES.includeHashtags,
-      })
-    })
-    setCaptions(generated)
-    setHasGenerated(true)
-  }, [])
+    doGenerate(EXAMPLE_VALUES)
+  }, [doGenerate])
 
   // Determine which platforms to show in results (selected ones in order)
   const visiblePlatforms = PLATFORM_ORDER.filter((p) =>
     formValues.selectedPlatforms.includes(p)
   )
+
+  // Get hashtag data from first platform result (same keywords apply)
+  const firstResult = results[visiblePlatforms[0]]
+  const hashtagData = firstResult?.hashtags
+  const keywordData = firstResult?.keywords
 
   return (
     <div className="bg-abyss bg-glow bg-grid min-h-screen flex flex-col">
@@ -100,12 +114,12 @@ export default function App() {
             Social Media Caption Generator
           </h1>
           <p className="text-cloudy text-lg max-w-2xl leading-relaxed">
-            Enter your topic, set your tone, and get platform-optimized captions for Instagram, LinkedIn, X, TikTok, and Facebook — instantly, no sign-up required.
+            Generate 5 unique caption angles per platform — each scored for hook strength, engagement, readability, and platform fit. Topic-relevant hashtags, not generic ones.
           </p>
         </header>
 
         {/* Two-column layout: form + results */}
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 lg:gap-8 items-start">
 
           {/* Left: Form */}
           <div className="lg:sticky lg:top-8">
@@ -118,7 +132,7 @@ export default function App() {
           </div>
 
           {/* Right: Caption cards */}
-          <div>
+          <div className="space-y-5">
             {visiblePlatforms.length === 0 ? (
               <div className="card-gradient border border-metal/20 rounded-2xl p-8 text-center">
                 <div className="w-12 h-12 rounded-full bg-metal/20 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
@@ -130,47 +144,54 @@ export default function App() {
                 <p className="text-galactic text-sm">Select at least one platform to see captions.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {visiblePlatforms.map((platform) => (
-                  <CaptionCard
-                    key={platform}
-                    platform={platform}
-                    caption={captions[platform] || ''}
-                    hasGenerated={hasGenerated && !!captions[platform]}
-                  />
-                ))}
-              </div>
+              <>
+                {/* Hashtag panel — shown after generation */}
+                {hasGenerated && hashtagData && hashtagData.length > 0 && formValues.includeHashtags && (
+                  <HashtagPanel hashtags={hashtagData} keywords={keywordData} />
+                )}
+
+                {/* Caption cards */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  {visiblePlatforms.map((platform) => (
+                    <CaptionCard
+                      key={`${platform}-${genCounter}`}
+                      platform={platform}
+                      captionData={results[platform] || null}
+                      hasGenerated={hasGenerated && !!results[platform]}
+                    />
+                  ))}
+                </div>
+              </>
             )}
 
             {/* Tips panel — shown after generation */}
             {hasGenerated && visiblePlatforms.length > 0 && (
-              <div className="mt-6 card-gradient border border-metal/20 rounded-2xl p-5 animate-fadeIn">
+              <div className="card-gradient border border-metal/20 rounded-2xl p-5 animate-fadeIn">
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-azure" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="8" x2="12" y2="12" />
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
-                  Tips for better performance
+                  How to use these captions
                 </h3>
-                <ul className="space-y-2">
-                  {[
-                    { label: 'Instagram', tip: 'Post during peak hours (6–9 AM or 6–8 PM) and reply to comments within the first hour to boost reach.' },
-                    { label: 'LinkedIn', tip: 'Tuesday–Thursday mornings drive the highest B2B engagement. End with a question to encourage comments.' },
-                    { label: 'X (Twitter)', tip: 'Threads outperform single tweets. Consider turning this into a 3-tweet thread for more impressions.' },
-                    { label: 'TikTok', tip: 'The caption matters less — focus on a strong hook in the first 2 seconds of your video.' },
-                    { label: 'Facebook', tip: 'Native video and link-in-comment posts often outperform posts with external links in the caption.' },
-                  ]
-                    .filter(({ label }) => visiblePlatforms.some((p) =>
-                      (p === 'twitter' && label === 'X (Twitter)') || p === label.toLowerCase()
-                    ))
-                    .map(({ label, tip }) => (
-                      <li key={label} className="flex gap-2 text-xs text-galactic leading-relaxed">
-                        <span className="text-azure font-semibold flex-shrink-0 w-16">{label}:</span>
-                        <span>{tip}</span>
-                      </li>
-                    ))
-                  }
+                <ul className="space-y-2.5">
+                  <li className="flex gap-2 text-xs text-galactic leading-relaxed">
+                    <span className="text-azure font-semibold flex-shrink-0">1.</span>
+                    <span><strong className="text-cloudy">Pick the highest-scoring angle</strong> — the overall score reflects hook strength, engagement potential, readability, and platform fit combined.</span>
+                  </li>
+                  <li className="flex gap-2 text-xs text-galactic leading-relaxed">
+                    <span className="text-azure font-semibold flex-shrink-0">2.</span>
+                    <span><strong className="text-cloudy">Edit in the textarea</strong> — each caption is fully editable. Personalize it with your brand voice, specific data, or customer quotes.</span>
+                  </li>
+                  <li className="flex gap-2 text-xs text-galactic leading-relaxed">
+                    <span className="text-azure font-semibold flex-shrink-0">3.</span>
+                    <span><strong className="text-cloudy">Mix hashtag tiers</strong> — combine niche (low competition) with broad (high reach) hashtags. The tiered system shows you which is which.</span>
+                  </li>
+                  <li className="flex gap-2 text-xs text-galactic leading-relaxed">
+                    <span className="text-azure font-semibold flex-shrink-0">4.</span>
+                    <span><strong className="text-cloudy">Re-generate for variety</strong> — each click produces different variations. Generate multiple times and pick your favorites.</span>
+                  </li>
                 </ul>
               </div>
             )}
