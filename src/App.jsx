@@ -64,6 +64,19 @@ export default function App() {
     doGenerate(EXAMPLE_VALUES)
   }, [doGenerate])
 
+  const fillTestData = useCallback(() => {
+    const testValues = {
+      topic: 'Summer sale on all web hosting plans — up to 60% off for new customers',
+      description: 'Our biggest sale of the year is here. All shared hosting plans are up to 60% off for the first year, including free domain, free SSL, and unlimited email. Perfect for bloggers, small businesses, and side projects launching this summer.',
+      cta: 'Grab the deal before it ends Sunday',
+      tone: 'bold',
+      includeHashtags: true,
+      selectedPlatforms: ['instagram', 'twitter', 'linkedin'],
+    }
+    setFormValues(testValues)
+    doGenerate(testValues)
+  }, [doGenerate])
+
   // Determine which platforms to show in results (selected ones in order)
   const visiblePlatforms = PLATFORM_ORDER.filter((p) =>
     formValues.selectedPlatforms.includes(p)
@@ -76,7 +89,7 @@ export default function App() {
 
   return (
     <div className="bg-abyss bg-glow bg-grid min-h-screen flex flex-col">
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-10 md:py-12">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full px-4 py-10 md:py-12">
 
         {/* Breadcrumb */}
         <nav className="mb-8 text-sm text-galactic" aria-label="Breadcrumb">
@@ -118,6 +131,16 @@ export default function App() {
           </p>
         </header>
 
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={fillTestData}
+            className="px-3 py-1.5 text-xs font-mono bg-prince/20 text-prince border border-prince/30 rounded hover:bg-prince/30 transition-colors focus:outline-none focus:ring-2 focus:ring-prince focus:ring-offset-2 focus:ring-offset-abyss"
+          >
+            Fill Test Data
+          </button>
+        </div>
+
         {/* Two-column layout: form + results */}
         <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 lg:gap-8 items-start">
 
@@ -152,13 +175,14 @@ export default function App() {
 
                 {/* Caption cards */}
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                  {visiblePlatforms.map((platform) => (
-                    <CaptionCard
-                      key={`${platform}-${genCounter}`}
-                      platform={platform}
-                      captionData={results[platform] || null}
-                      hasGenerated={hasGenerated && !!results[platform]}
-                    />
+                  {visiblePlatforms.map((platform, index) => (
+                    <div key={`${platform}-${genCounter}`} className="animate-slideUp" style={{ animationDelay: `${index * 0.08}s` }}>
+                      <CaptionCard
+                        platform={platform}
+                        captionData={results[platform] || null}
+                        hasGenerated={hasGenerated && !!results[platform]}
+                      />
+                    </div>
                   ))}
                 </div>
               </>
@@ -201,7 +225,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-metal/30 mt-12 py-6 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-galactic">
+        <div className="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-galactic">
           <p>
             Free marketing tools by{' '}
             <a
